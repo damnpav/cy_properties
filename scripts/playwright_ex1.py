@@ -1,26 +1,41 @@
 from playwright.sync_api import sync_playwright
 import time
 
+
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=False)
     context = browser.new_context()
     page = context.new_page()
     page.goto("https://www.bazaraki.com/real-estate-to-rent/apartments-flats/")
+    time.sleep(5)
 
-    time.sleep(10)
-    if page.get_by_role("button", name="Согласиться").is_visible():
-        page.get_by_role("button", name="Согласиться").click()
-    time.sleep(10)
+    # Принимаем cookies
+    try:
+        page.get_by_role("button", name="Согласиться").click(timeout=5000)
+    except:
+        pass
+    time.sleep(2)
 
     links = page.eval_on_selector_all(
-        "a.js-advert",  # все теги <a class="mask js-advert">
-        "elements => elements.map(el => el.href)"
+        "a[href*='/adv/']",
+        "els => els.map(el => el.href)"
     )
 
-    # приводим к полным ссылкам
-    full_links = [f"https://www.bazaraki.com{l}" if l.startswith("/") else l for l in links]
+    print(f'write links from page 1')
+    with open(f'links_buf1.txt', 'w') as file:
+        file.write('\n'.join(links))
 
-    print(full_links)
-    print(len(full_links))
+    time.sleep(2)
+    print(f'go to page 2')
+    page.get_by_role("link", name="2", exact=True).click()
+    time.sleep(10)
+    links = page.eval_on_selector_all(
+        "a[href*='/adv/']",
+        "els => els.map(el => el.href)"
+    )
+
+    print(f'write links from page 2')
+    with open(f'links_buf2.txt', 'w') as file:
+        file.write('\n'.join(links))
 
     browser.close()
