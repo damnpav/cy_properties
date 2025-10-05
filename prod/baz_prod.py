@@ -7,7 +7,7 @@ from playwright.sync_api import sync_playwright
 
 # === CONFIG ===
 BASE_URL = "https://www.bazaraki.com/real-estate-to-rent/apartments-flats/"
-TOTAL_PAGES = 88
+TOTAL_PAGES = 10
 DB_FILE = "bazaraki_links.db"
 
 # === INIT DATABASE ===
@@ -18,6 +18,7 @@ cur.execute("""
 CREATE TABLE IF NOT EXISTS links (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     url TEXT NOT NULL,
+    page_number INTEGER,
     report_dt TEXT NOT NULL
 )
 """)
@@ -41,11 +42,11 @@ def log(level, message):
     conn.commit()
 
 
-def save_links(links):
+def save_links(links, page_number):
     """Save links to database with current datetime."""
     report_dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     unique_links = list(set(links))
-    cur.executemany("INSERT INTO links (url, report_dt) VALUES (?, ?)", [(l, report_dt) for l in unique_links])
+    cur.executemany("INSERT INTO links (url, report_dt, page_number) VALUES (?, ?, ?)", [(l, report_dt, page_number) for l in unique_links])
     conn.commit()
     log("info", f"Saved {len(unique_links)} unique links.")
 
@@ -97,5 +98,5 @@ with sync_playwright() as p:
             continue
 
     browser.close()
-    conn.close()
     log("info", "Scraping completed successfully.")
+    conn.close()
