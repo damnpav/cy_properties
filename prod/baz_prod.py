@@ -88,7 +88,7 @@ with sync_playwright() as p:
             )
             log("info", f"Found {len(links)} links on page {page_num}.")
 
-            save_links(links)
+            save_links(links, page_num)
 
             random_delay(0, 3)
 
